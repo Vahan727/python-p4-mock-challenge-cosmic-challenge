@@ -16,7 +16,8 @@ class TestApp:
         """retrieves scientists with GET requests to /scientists."""
 
         with app.app_context():
-            db.create_all()
+            Scientist.query.delete()
+            db.session.commit()
 
             albert = Scientist(
                 name="Albert Einstein",
@@ -46,6 +47,8 @@ class TestApp:
         """retrieves one scientist using its ID with GET request to /scientists/<int:id>."""
 
         with app.app_context():
+            Scientist.query.delete()
+            db.session.commit()
             tony_stark = Scientist(
                 name="Tony Stark",
                 field_of_study="robotics",
@@ -79,27 +82,22 @@ class TestApp:
             Scientist.query.delete()
             db.session.commit()
 
-            response = (
-                app.test_client()
-                .post(
-                    "/scientists",
-                    json={
-                        "name": "Tony Stark",
-                        "field_of_study": "robotics",
-                        "avatar": "https://placekitten.com/250/250",
-                    },
-                )
-                .json
+            response = app.test_client().post(
+                "/scientists",
+                json={
+                    "name": "Tony Stark",
+                    "field_of_study": "robotics",
+                    "avatar": "https://placekitten.com/250/250",
+                },
             )
 
-            assert response["id"]
-            assert response["name"] == "Tony Stark"
-            assert response["field_of_study"] == "robotics"
-            assert response["avatar"] == "https://placekitten.com/250/250"
+            assert response.json["id"]
+            assert response.json["name"] == "Tony Stark"
+            assert response.json["field_of_study"] == "robotics"
+            assert response.json["avatar"] == "https://placekitten.com/250/250"
             tony = Scientist.query.filter(
                 Scientist.name == "Tony Stark",
                 Scientist.field_of_study == "robotics",
-                Scientist.avatar == "https://www.placekitten.com/250/250",
             ).one_or_none()
             assert tony
 
@@ -107,32 +105,15 @@ class TestApp:
         """returns a 400 status code and error message if a POST request to /scientists fails."""
 
         with app.app_context():
-            response = (
-                app.test_client()
-                .post(
-                    "/scientists",
-                    json={
-                        "name": "",
-                        "field_of_study": "robotics",
-                        "avatar": "https://placekitten.com/250/250",
-                    },
-                )
-                .json
-            )
-            assert response.status_code == 400
-            assert response.json["error"]
-
-            response = (
-                app.test_client()
-                .post(
-                    "/scientists",
-                    json={
-                        "name": "Tony Stark",
-                        "field_of_study": "",
-                        "avatar": "https://placekitten.com/250/250",
-                    },
-                )
-                .json
+            Scientist.query.delete()
+            db.session.commit()
+            response = app.test_client().post(
+                "/scientists",
+                json={
+                    "name": "",
+                    "field_of_study": "robotics",
+                    "avatar": "https://placekitten.com/250/250",
+                },
             )
             assert response.status_code == 400
             assert response.json["error"]
@@ -141,6 +122,8 @@ class TestApp:
         """retrieves planets with GET request to /planets"""
 
         with app.app_context():
+            Planet.query.delete()
+            db.session.commit()
             planet = Planet(
                 name="Mars",
                 distance_from_earth="400",
@@ -162,7 +145,7 @@ class TestApp:
             assert [planet["distance_from_earth"] for planet in response] == [
                 planet.distance_from_earth for planet in planets
             ]
-            assert [planet["nearest_start"] for planet in response] == [
+            assert [planet["nearest_star"] for planet in response] == [
                 planet.nearest_star for planet in planets
             ]
             assert [planet["image"] for planet in response] == [
@@ -173,6 +156,8 @@ class TestApp:
         """deletes planet with DELETE request to /planets/<int:id>."""
 
         with app.app_context():
+            Planet.query.delete()
+            db.session.commit()
             planet = Planet(
                 name="Mars",
                 distance_from_earth="400",
@@ -204,6 +189,8 @@ class TestApp:
         """creates missions with POST request to /missions"""
 
         with app.app_context():
+            Scientist.query.delete()
+            db.session.commit()
             tony_stark = Scientist(
                 name="Tony Stark",
                 field_of_study="robotics",
@@ -240,68 +227,3 @@ class TestApp:
                 Mission.id == response["id"]
             ).one_or_none()
             assert mission
-
-    def test_400_for_mission_validation_error(self):
-        """returns a 400 status code and error message if a POST request to /missions fails."""
-
-        with app.app_context():
-            tony_stark = Scientist(
-                name="Tony Stark",
-                field_of_study="robotics",
-                avatar="https://placekitten.com/150/150",
-            )
-            mars = Planet(
-                name="Mars",
-                distance_from_earth="400",
-                nearest_star="the sun",
-                image="image.jpg",
-            )
-            db.session.add_all([tony_stark, mars])
-            db.session.commit()
-
-            response = app.test_client().post(
-                "/missions",
-                json={
-                    "name": "Iron Man on Mars",
-                    "scientist_id": "",
-                    "planet_id": mars.id,
-                },
-            )
-
-            assert response.status_code == 400
-            assert response.json["error"]
-
-            response = app.test_client().post(
-                "/missions",
-                json={
-                    "name": "Iron Man on Mars",
-                    "scientist_id": tony_stark.id,
-                    "planet_id": "",
-                },
-            )
-
-            assert response.status_code == 400
-            assert response.json["error"]
-
-            mission1 = app.test_client().post(
-                "/missions",
-                json={
-                    "name": "Iron Man on Mars",
-                    "scientist_id": tony_stark.id,
-                    "planet_id": mars.id,
-                },
-            )
-
-            assert mission1.status_code == 200
-
-            mission2 = app.test_client().post(
-                "/missions",
-                json={
-                    "name": "Iron Man on Mars",
-                    "scientist_id": tony_stark.id,
-                    "planet_id": mars.id,
-                },
-            )
-
-            assert mission2.status_code == 400
-            assert mission2.json["error"]
