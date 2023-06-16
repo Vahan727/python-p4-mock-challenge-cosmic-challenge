@@ -40,6 +40,11 @@ class TestApp:
                 scientist.avatar for scientist in scientists
             ]
 
+            db.session.query(Scientist).filter(
+                Scientist.id == albert.id
+            ).delete()
+            db.session.commit()
+
     def test_gets_scientists_by_id(self):
         """retrieves one scientist using its ID with GET request to /scientists/<int:id>."""
 
@@ -59,17 +64,16 @@ class TestApp:
             assert response["avatar"] == tony_stark.avatar
             assert response["field_of_study"] == tony_stark.field_of_study
 
-            Scientist.query.delete(tony_stark)
+            db.session.query(Scientist).filter(
+                Scientist.id == tony_stark.id
+            ).delete()
             db.session.commit()
 
     def test_returns_404_if_no_scientist(self):
         """returns an error message and 404 status code when a scientist is searched by a non-existent ID."""
 
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
-
-            response = app.test_client().get("/scientists/1")
+            response = app.test_client().get("/scientists/1000")
             assert response.json.get("error")
             assert response.status_code == 404
 
@@ -95,6 +99,11 @@ class TestApp:
                 Scientist.field_of_study == "robotics",
             ).one_or_none()
             assert tony
+
+            db.session.query(Scientist).filter(
+                Scientist.id == response.json["id"]
+            ).delete()
+            db.session.commit()
 
     def test_400_for_scientist_validation_error(self):
         """returns a 400 status code and error message if a POST request to /scientists fails."""
@@ -211,3 +220,13 @@ class TestApp:
                 Mission.id == response["id"]
             ).one_or_none()
             assert mission
+            db.session.query(Scientist).filter(
+                Scientist.id == tony_stark.id
+            ).delete()
+            db.session.commit()
+            db.session.query(Planet).filter(Planet.id == mars.id).delete()
+            db.session.commit()
+            db.session.query(Mission).filter(
+                Mission.id == response["id"]
+            ).delete()
+            db.session.commit()
