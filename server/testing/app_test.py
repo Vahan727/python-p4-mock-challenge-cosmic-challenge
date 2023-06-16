@@ -16,9 +16,6 @@ class TestApp:
         """retrieves scientists with GET requests to /scientists."""
 
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
-
             albert = Scientist(
                 name="Albert Einstein",
                 field_of_study="physics",
@@ -47,8 +44,6 @@ class TestApp:
         """retrieves one scientist using its ID with GET request to /scientists/<int:id>."""
 
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
             tony_stark = Scientist(
                 name="Tony Stark",
                 field_of_study="robotics",
@@ -63,6 +58,9 @@ class TestApp:
             assert response["name"] == tony_stark.name
             assert response["avatar"] == tony_stark.avatar
             assert response["field_of_study"] == tony_stark.field_of_study
+
+            Scientist.query.delete(tony_stark)
+            db.session.commit()
 
     def test_returns_404_if_no_scientist(self):
         """returns an error message and 404 status code when a scientist is searched by a non-existent ID."""
@@ -79,9 +77,6 @@ class TestApp:
         """creates one scientist using a name, field_of_study, and avatar with a POST request to /scientists."""
 
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
-
             response = app.test_client().post(
                 "/scientists",
                 json={
@@ -105,8 +100,6 @@ class TestApp:
         """returns a 400 status code and error message if a POST request to /scientists fails."""
 
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
             response = app.test_client().post(
                 "/scientists",
                 json={
@@ -122,8 +115,6 @@ class TestApp:
         """retrieves planets with GET request to /planets"""
 
         with app.app_context():
-            Planet.query.delete()
-            db.session.commit()
             planet = Planet(
                 name="Mars",
                 distance_from_earth="400",
@@ -156,8 +147,6 @@ class TestApp:
         """deletes planet with DELETE request to /planets/<int:id>."""
 
         with app.app_context():
-            Planet.query.delete()
-            db.session.commit()
             planet = Planet(
                 name="Mars",
                 distance_from_earth="400",
@@ -178,10 +167,7 @@ class TestApp:
         """returns 404 status code with DELETE request to /planets/<int:id> if planet does not exist."""
 
         with app.app_context():
-            Planet.query.delete()
-            db.session.commit()
-
-            response = app.test_client().delete("/planets/1")
+            response = app.test_client().delete("/planets/1000")
             assert response.json.get("error")
             assert response.status_code == 404
 
@@ -189,8 +175,6 @@ class TestApp:
         """creates missions with POST request to /missions"""
 
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
             tony_stark = Scientist(
                 name="Tony Stark",
                 field_of_study="robotics",

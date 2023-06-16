@@ -11,9 +11,6 @@ class TestModels:
     def test_validates_scientist_name(self):
         """require scientist to have names."""
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
-
             scientist = Scientist()
             with pytest.raises(IntegrityError):
                 db.session.add(scientist)
@@ -26,9 +23,6 @@ class TestModels:
     def test_validates_scientist_field_of_study(self):
         """require scientist to have fields of study."""
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
-
             scientist = Scientist(name="tony stark")
             with pytest.raises(IntegrityError):
                 db.session.add(scientist)
@@ -41,8 +35,6 @@ class TestModels:
     def test_validates_scientist_unique(self):
         """requires scientist to have unique names"""
         with app.app_context():
-            Scientist.query.delete()
-            db.session.commit()
             scientist1 = Scientist(
                 name="John Smith", field_of_study="robotics"
             )
@@ -56,8 +48,6 @@ class TestModels:
     def test_validates_mission_name(self):
         """require missions to have name"""
         with app.app_context():
-            Mission.query.delete()
-            db.session.commit()
             mission1 = Mission(scientist_id=2, planet_id=1)
             with pytest.raises(IntegrityError):
                 db.session.add(mission1)
@@ -66,8 +56,6 @@ class TestModels:
     def test_validates_mission_scientist(self):
         """require missions to have scientist"""
         with app.app_context():
-            Mission.query.delete()
-            db.session.commit()
             mission1 = Mission(name="mars trip", planet_id=1)
             with pytest.raises(IntegrityError):
                 db.session.add(mission1)
@@ -76,8 +64,6 @@ class TestModels:
     def test_validates_mission_planet(self):
         """require missions to have name"""
         with app.app_context():
-            Mission.query.delete()
-            db.session.commit()
             mission1 = Mission(scientist_id=2, name="john smith")
             with pytest.raises(IntegrityError):
                 db.session.add(mission1)
