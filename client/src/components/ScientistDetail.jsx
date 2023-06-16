@@ -70,7 +70,7 @@ function ScientistDetail() {
       setShowEdit(false)
   }
 
-  const planetCards = scientist?.planets.map(p => <PlanetCard key={p.id} planet={p} image={planetMap[p.image]}/>)
+  const planetCards = scientist?.scientist_missions.map(p => <PlanetCard key={p.id} planet={p} image={planetMap[p.image]}/>)
   
   if (status === "pending") return <h2>Loading...</h2>;
   if (status === "rejected") return <h2>Error: {error.error}</h2>;
