@@ -71,13 +71,13 @@ class ScientistByID(Resource):
         missions = Mission.query.filter(Mission.scientist_id == id).all()
         if not scientist:
             return ({"error": "404 not found"}, 404)
-        if missions:
-            for mission in missions:
-                print(mission)
-                db.session.query(Mission).filter(
-                    Mission.id == mission.id
-                ).delete()
-                db.session.commit()
+        # if missions:
+        #     for mission in missions:
+        #         print(mission)
+        #         db.session.query(Mission).filter(
+        #             Mission.id == mission.id
+        #         ).delete()
+        #         db.session.commit()
         db.session.delete(scientist)
         db.session.commit()
         return ({}, 204)

@@ -25,7 +25,7 @@ class Planet(db.Model, SerializerMixin):
     distance_from_earth = db.Column(db.String)
     nearest_star = db.Column(db.String)
     image = db.Column(db.String)
-    planet_missions = db.relationship("Mission", back_populates="planet")
+    planet_missions = db.relationship("Mission", back_populates="planet", passive_deletes=True)
 
     serialize_only = (
         "id",
@@ -47,7 +47,7 @@ class Scientist(db.Model, SerializerMixin):
     field_of_study = db.Column(db.String, nullable=False)
     avatar = db.Column(db.String)
     planets = association_proxy("scientist_missions", "planet")
-    scientist_missions = db.relationship("Mission", back_populates="scientist")
+    scientist_missions = db.relationship("Mission", back_populates="scientist", passive_deletes=True)
 
     serialize_rules = (
         "-missions.scientist",
@@ -77,13 +77,13 @@ class Mission(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     scientist_id = db.Column(
-        db.Integer, db.ForeignKey("scientists.id"), nullable=False
+        db.Integer, db.ForeignKey("scientists.id", ondelete="CASCADE"), nullable=False
     )
     scientist = db.relationship(
         "Scientist", back_populates="scientist_missions"
     )
     planet_id = db.Column(
-        db.Integer, db.ForeignKey("planets.id"), nullable=False
+        db.Integer, db.ForeignKey("planets.id", ondelete="CASCADE"), nullable=False
     )
     planet = db.relationship("Planet", back_populates="planet_missions")
 
