@@ -55,6 +55,25 @@ class ScientistByID(Resource):
         except Exception:
             return ({"error": "404 not found"}, 404)
 
+    def patch(self, id):
+        data = request.get_json()
+        scientist = Scientist.query.filter(Scientist.id == id).first()
+        if not scientist:
+            return ({"error": "404 not found"}, 404)
+        for attr in data:
+            setattr(scientist, attr, data.get(attr))
+        db.session.add(scientist)
+        db.session.commit()
+        return scientist.to_dict(), 200
+
+    def delete(self, id):
+        scientist = Scientist.query.filter(Scientist.id == id).first()
+        if not scientist:
+            return ({"error": "404 not found"}, 404)
+        db.session.delete(scientist)
+        db.session.commit()
+        return ({}, 204)
+
 
 api.add_resource(ScientistByID, "/scientists/<int:id>")
 

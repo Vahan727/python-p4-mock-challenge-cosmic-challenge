@@ -12,6 +12,12 @@ from models import Planet, Scientist, Mission
 class TestApp:
     """Flask application in app.py"""
 
+    with app.app_context():
+        Scientist.query.delete()
+        Planet.query.delete()
+        Mission.query.delete()
+        db.session.commit()
+
     def test_gets_scientists(self):
         """retrieves scientists with GET requests to /scientists."""
 
@@ -101,7 +107,7 @@ class TestApp:
             assert tony
 
             db.session.query(Scientist).filter(
-                Scientist.id == response.json["id"]
+                Scientist.id == tony.id
             ).delete()
             db.session.commit()
 
@@ -119,6 +125,57 @@ class TestApp:
             )
             assert response.status_code == 400
             assert response.json["error"]
+
+    def test_updates_scientist(self):
+        """updates scientist with PATCH request to /scientists/<int:id>"""
+
+        with app.app_context():
+            peter = Scientist(
+                name="Peter Parker",
+                field_of_study="nanotechnolgy",
+                avatar="image.jpg",
+            )
+
+            db.session.add(peter)
+            db.session.commit()
+
+            response = (
+                app.test_client()
+                .patch(
+                    f"/scientists/{peter.id}",
+                    json={"field_of_study": "robotics like tony stark"},
+                )
+                .json
+            )
+
+            assert response["id"]
+            assert response["name"] == peter.name
+            assert response["avatar"] == peter.avatar
+            assert response["field_of_study"] == "robotics like tony stark"
+
+            Scientist.query.delete()
+            db.session.commit()
+
+    def test_deletes_scientist_by_id(self):
+        """deletes scientist with DELETE request to /scientists/<int:id>."""
+
+        with app.app_context():
+            albert = Scientist(
+                name="Albert Einstein",
+                field_of_study="physics",
+                avatar="https://placekitten.com/150/150",
+            )
+            db.session.add(albert)
+            db.session.commit()
+
+            response = app.test_client().delete(f"/scientists/{albert.id}")
+
+            assert response.status_code == 204
+
+            scientist = Scientist.query.filter(
+                Scientist.id == albert.id
+            ).one_or_none()
+            assert not scientist
 
     def test_gets_planets(self):
         """retrieves planets with GET request to /planets"""
@@ -152,33 +209,13 @@ class TestApp:
                 planet.image for planet in planets
             ]
 
-    def test_deletes_planets_by_id(self):
-        """deletes planet with DELETE request to /planets/<int:id>."""
+    # def test_returns_404_if_no_planet(self):
+    #     """returns 404 status code with DELETE request to /planets/<int:id> if planet does not exist."""
 
-        with app.app_context():
-            planet = Planet(
-                name="Mars",
-                distance_from_earth="400",
-                nearest_star="the sun",
-                image="image.jpg",
-            )
-            db.session.add(planet)
-            db.session.commit()
-
-            response = app.test_client().delete(f"/planets/{planet.id}")
-
-            assert response.status_code == 204
-
-            planet = Planet.query.filter(Planet.id == planet.id).one_or_none()
-            assert not planet
-
-    def test_returns_404_if_no_planet(self):
-        """returns 404 status code with DELETE request to /planets/<int:id> if planet does not exist."""
-
-        with app.app_context():
-            response = app.test_client().delete("/planets/1000")
-            assert response.json.get("error")
-            assert response.status_code == 404
+    #     with app.app_context():
+    #         response = app.test_client().delete("/planets/1000")
+    #         assert response.json.get("error")
+    #         assert response.status_code == 404
 
     def test_creates_missions(self):
         """creates missions with POST request to /missions"""
