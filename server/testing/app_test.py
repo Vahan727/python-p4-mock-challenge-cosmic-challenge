@@ -165,7 +165,23 @@ class TestApp:
                 field_of_study="physics",
                 avatar="https://placekitten.com/150/150",
             )
-            db.session.add(albert)
+
+            mars = Planet(
+                name="Mars",
+                distance_from_earth="400",
+                nearest_star="the sun",
+                image="image.jpg",
+            )
+            db.session.add_all([albert, mars])
+            db.session.commit()
+
+            mission = Mission(
+                name="mission to mars",
+                scientist_id=albert.id,
+                planet_id=mars.id,
+            )
+
+            db.session.add(mission)
             db.session.commit()
 
             response = app.test_client().delete(f"/scientists/{albert.id}")
