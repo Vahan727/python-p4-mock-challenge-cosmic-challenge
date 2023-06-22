@@ -17,43 +17,38 @@ api = Api(app)
 db.init_app(app)
 
 
-@app.route("/")
+@app.route('/')
 def home():
-    return ""
-
+    return ''
 
 class Scientists(Resource):
     def get(self):
-        scientists = [
-            scientist.to_dict() for scientist in Scientist.query.all()
-        ]
+        scientists = [s.to_dict() for s in Scientist.query.all()]
         return scientists, 200
-
+    
     def post(self):
         data = request.get_json()
         try:
             new_scientist = Scientist(
-                name=data.get("name"),
-                field_of_study=data.get("field_of_study"),
-                avatar=data.get("avatar"),
+                name = data.get("name"),
+                field_of_study = data.get("field_of_study"),
+                avatar = data.get("avatar"),
             )
             db.session.add(new_scientist)
             db.session.commit()
             return new_scientist.to_dict(), 201
         except Exception:
-            return ({"error": "400"}, 400)
-
+            return ({"error": "400: Validation error"}, 400)
 
 api.add_resource(Scientists, "/scientists")
 
-
-class ScientistByID(Resource):
+class ScientistById(Resource):
     def get(self, id):
         try:
             scientist = Scientist.query.filter(Scientist.id == id).first()
             return scientist.to_dict(), 200
         except Exception:
-            return ({"error": "404 not found"}, 404)
+            return ({"error": "400: Validation error"}, 400)
 
     def patch(self, id):
         data = request.get_json()
@@ -62,65 +57,43 @@ class ScientistByID(Resource):
             return ({"error": "404 not found"}, 404)
         for attr in data:
             setattr(scientist, attr, data.get(attr))
+
         db.session.add(scientist)
         db.session.commit()
-        return scientist.to_dict(), 200
-
+        return scientist.to_dict(), 202
+    
     def delete(self, id):
-        scientist = Scientist.query.filter(Scientist.id == id).first()
-        missions = Mission.query.filter(Mission.scientist_id == id).all()
+        scientist = Scientist.query.filter_by(id = id).first()
+        missions = Mission.query.filter_by(id = id).all()
         if not scientist:
             return ({"error": "404 not found"}, 404)
-        # if missions:
-        #     for mission in missions:
-        #         print(mission)
-        #         db.session.query(Mission).filter(
-        #             Mission.id == mission.id
-        #         ).delete()
-        #         db.session.commit()
+        if missions:
+            for m in missions:
+                db.session.query(Mission).filter(Mission.id == m.id).delete()
+                db.session.commit()
         db.session.delete(scientist)
         db.session.commit()
         return ({}, 204)
 
-
-api.add_resource(ScientistByID, "/scientists/<int:id>")
-
-
-class Planets(Resource):
-    def get(self):
-        return [planet.to_dict() for planet in Planet.query.all()], 200
-
-
-api.add_resource(Planets, "/planets")
-
-
-class PlanetsByID(Resource):
-    def delete(self, id):
-        planet = Planet.query.filter(Planet.id == id).first()
-        try:
-            db.session.delete(planet)
-            db.session.commit()
-            return ({}, 204)
-        except Exception:
-            return ({"error": "404"}, 404)
-
-
-api.add_resource(PlanetsByID, "/planets/<int:id>")
-
+api.add_resource(ScientistById, "/scientists/<int:id>")
 
 class Missions(Resource):
     def post(self):
         data = request.get_json()
-        new_mission = Mission(
-            name=data.get("name"),
-            scientist_id=data.get("scientist_id"),
-            planet_id=data.get("planet_id"),
-        )
-        db.session.add(new_mission)
-        db.session.commit()
-        return new_mission.to_dict(), 201
-
+        try:
+            new_mission = Mission(
+                name = data.get('name'),
+                scientist_id = data.get('scientist_id'),
+                planet_id = data.get('planet_id'),
+            )
+            db.session.add(new_mission)
+            db.session.commit()
+            return new_mission.to_dict(), 201
+        except:
+            return "Could not post mission", 400
 
 api.add_resource(Missions, "/missions")
-if __name__ == "__main__":
+
+
+if __name__ == '__main__':
     app.run(port=5555, debug=True)

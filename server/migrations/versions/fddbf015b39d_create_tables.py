@@ -1,8 +1,8 @@
-"""relationbships
+"""create tables
 
-Revision ID: ca31e67ede8e
+Revision ID: fddbf015b39d
 Revises: 
-Create Date: 2023-06-15 21:34:23.310880
+Create Date: 2023-06-20 11:04:21.099617
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ca31e67ede8e'
+revision = 'fddbf015b39d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -42,7 +42,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['planet_id'], ['planets.id'], name=op.f('fk_missions_planet_id_planets')),
     sa.ForeignKeyConstraint(['scientist_id'], ['scientists.id'], name=op.f('fk_missions_scientist_id_scientists')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_missions')),
-    sa.UniqueConstraint('name', 'scientist_id', 'planet_id', name=op.f('uq_missions_name'))
+    sa.UniqueConstraint('scientist_id', name=op.f('uq_missions_scientist_id'))
     )
     # ### end Alembic commands ###
 
